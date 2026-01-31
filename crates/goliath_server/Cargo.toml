@@ -1,7 +1,8 @@
 [package]
 name = "goliath_server"
-version = "0.1.0"
-edition = "2024"
+edition.workspace = true
+license-file.workspace = true
+version.workspace = true
 
 [dependencies]
 goliath_common = { path = "../goliath_common" }

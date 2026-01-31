@@ -1,6 +1,6 @@
+use goliath_common::GoliathTracingError;
 use sdl2::IntegerOrSdlError;
 use sdl2::video::WindowBuildError;
-use goliath_common::GoliathTracingError;
 
 pub(crate) type GoliathOperatorResult<T> = Result<T, GoliathOperatorError>;
 

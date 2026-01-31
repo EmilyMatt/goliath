@@ -49,7 +49,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Check Documentation
-        run: cargo doc --all
+        run: cargo doc --all --no-deps
 
   deny:
     name: Check Licenses and CVEs

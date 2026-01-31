@@ -1,12 +1,12 @@
 [package]
 name = "goliath_vehicle"
-version = "0.1.0"
-edition = "2024"
+edition.workspace = true
+license-file.workspace = true
+version.workspace = true
 
 [dependencies]
 goliath_common = { path = "../goliath_common", features = ["video"] }
 
-env_logger = { workspace = true }
 futures-util = { workspace = true }
 gstreamer = { workspace = true }
 gstreamer-app = { workspace = true }

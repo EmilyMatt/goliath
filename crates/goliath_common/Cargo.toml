@@ -1,7 +1,8 @@
 [package]
 name = "goliath_common"
-version = "0.1.0"
-edition = "2024"
+edition.workspace = true
+license-file.workspace = true
+version.workspace = true
 
 [dependencies]
 bitcode = { workspace = true }
