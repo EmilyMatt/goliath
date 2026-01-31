@@ -48,6 +48,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - name: Install dependencies
+        run: sudo ./bootstrap.sh
       - name: Check Documentation
         run: cargo doc --all --no-deps
 
