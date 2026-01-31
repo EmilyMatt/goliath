@@ -16,6 +16,7 @@ async fn main() -> GoliathOperatorResult<()> {
 
     loop {
         log::info!("Attempting new connection");
+        // TODO: Replace this with clap arg, then with a wireguard-provided address
         let client_ws = GoliathClient::try_new(Ipv4Addr::new(192, 168, 0, 100), 5000).await?;
         let mut session_ctx = GoliathOperatorSession::try_new(client_ws)?;
 
