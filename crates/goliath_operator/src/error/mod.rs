@@ -1,10 +1,9 @@
-use goliath_common::GoliathTracingError;
-use sdl2::IntegerOrSdlError;
-use sdl2::video::WindowBuildError;
+use goliath_common::{GoliathSerdeError, GoliathTracingError, GoliathVideoError};
+use gstreamer::glib;
 
 pub(crate) type GoliathOperatorResult<T> = Result<T, GoliathOperatorError>;
 
-#[allow(dead_code)]
+#[allow(dead_code, clippy::enum_variant_names)]
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum GoliathOperatorError {
     #[error("General error: {0}")]
@@ -37,9 +36,15 @@ pub(crate) enum GoliathOperatorError {
     #[error("Error while initializing logging/tracing: {0}")]
     TracingInitError(#[from] GoliathTracingError),
 
-    #[error("Error while creating application window: {0}")]
-    WindowCreationError(#[from] WindowBuildError),
+    #[error("Error while serializing/deserializing: {0}")]
+    SerdeError(#[from] GoliathSerdeError),
 
-    #[error("Overflow or SDL Error: {0}")]
-    IntegerOrSdlError(#[from] IntegerOrSdlError),
+    #[error("Video pipeline error: {0}")]
+    VideoError(#[from] GoliathVideoError),
+
+    #[error("GStreamer error: {0}")]
+    GlibError(#[from] glib::Error),
+
+    #[error("GStreamer initialization error: {0}")]
+    GlibBoolError(#[from] glib::BoolError),
 }

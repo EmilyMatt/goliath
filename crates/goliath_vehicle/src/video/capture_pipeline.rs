@@ -1,7 +1,6 @@
 use crate::error::GoliathVehicleResult;
-use crate::video::PipelineWrapper;
 use crate::video::encoding_pipeline::EncodingPipline;
-use goliath_common::{GoliathGstAppsrc, GoliathGstPipeline, GoliathVideoError};
+use goliath_common::{GoliathGstAppsrc, GoliathGstPipeline, GoliathVideoError, PipelineWrapper};
 use gstreamer::prelude::{Cast, ElementExt, ElementExtManual, GstBinExtManual};
 use gstreamer::{ClockTime, Fraction};
 use std::sync::Arc;
@@ -108,7 +107,7 @@ impl CapturePipeline {
 
         Ok(Self {
             encoding_pipline,
-            pipeline: PipelineWrapper(pipeline),
+            pipeline: PipelineWrapper::wrap(pipeline),
             appsink,
             stopped: AtomicBool::new(false),
         })
@@ -117,7 +116,7 @@ impl CapturePipeline {
 
 impl GoliathGstPipeline for CapturePipeline {
     fn get_pipeline(&self) -> &gstreamer::Pipeline {
-        &self.pipeline.0
+        self.pipeline.as_ref()
     }
 
     fn start_pipeline(&self, _: Option<&gstreamer::Caps>) -> Result<(), GoliathVideoError> {

@@ -1,22 +1,22 @@
+use crate::GoliathVehicleResult;
 use crate::error::GoliathVehicleError;
 use crate::motors::MotorsContoller;
 use crate::video::capture_pipeline::{CapturePipeline, ZedCamCaps};
 use crate::video::encoding_pipeline::{EncoderType, EncodingPipline};
 use crate::video::rtp_pipeline::RTPPipeline;
-use crate::{GoliathVehicleResult, stop_main_loop};
 use futures_util::stream::StreamExt;
-use goliath_common::GoliathGstPipeline;
 pub use goliath_common::{GoliathCommand, MotorCommand};
+use goliath_common::{GoliathGstPipeline, stop_main_loop};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::thread;
 use tokio::net::TcpStream;
 use tokio::sync::mpsc;
-use tokio_tungstenite::WebSocketStream;
 use tokio_tungstenite::tungstenite::Message;
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 
-pub(crate) struct GoliathSession {
-    operator_ws: WebSocketStream<TcpStream>,
+pub(crate) struct GoliathVehicleSession {
+    operator_ws: WebSocketStream<MaybeTlsStream<TcpStream>>,
 
     capture_pipeline: Arc<CapturePipeline>,
 
@@ -24,10 +24,10 @@ pub(crate) struct GoliathSession {
     motors_thread: Option<thread::JoinHandle<GoliathVehicleResult<()>>>,
 }
 
-impl GoliathSession {
+impl GoliathVehicleSession {
     pub(crate) fn try_new(
         operator_addr: SocketAddr,
-        operator_ws: WebSocketStream<TcpStream>,
+        operator_ws: WebSocketStream<MaybeTlsStream<TcpStream>>,
         capture_caps: ZedCamCaps,
         encoder_type: EncoderType,
     ) -> GoliathVehicleResult<Self> {

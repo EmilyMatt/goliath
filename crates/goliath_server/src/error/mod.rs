@@ -2,7 +2,7 @@ use goliath_common::GoliathTracingError;
 
 pub(crate) type GoliathServerResult<T> = Result<T, GoliathServerError>;
 
-#[allow(dead_code)]
+#[allow(dead_code, clippy::enum_variant_names)]
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum GoliathServerError {
     #[error("General error: {0}")]

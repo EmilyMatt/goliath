@@ -1,7 +1,6 @@
 use crate::error::GoliathVehicleResult;
-use crate::video::PipelineWrapper;
 use crate::video::rtp_pipeline::RTPPipeline;
-use goliath_common::{GoliathGstAppsrc, GoliathGstPipeline, GoliathVideoError};
+use goliath_common::{GoliathGstAppsrc, GoliathGstPipeline, GoliathVideoError, PipelineWrapper};
 use gstreamer::ClockTime;
 use gstreamer::prelude::{Cast, ElementExt, ElementExtManual, GstBinExtManual};
 use gstreamer_app::gst;
@@ -107,7 +106,7 @@ impl EncodingPipline {
 
         Ok(Self {
             rtp_pipeline,
-            pipeline: PipelineWrapper(pipeline),
+            pipeline: PipelineWrapper::wrap(pipeline),
             appsrc,
             appsink,
             started: AtomicBool::new(false),
@@ -118,7 +117,7 @@ impl EncodingPipline {
 
 impl GoliathGstPipeline for EncodingPipline {
     fn get_pipeline(&self) -> &gstreamer::Pipeline {
-        &self.pipeline.0
+        self.pipeline.as_ref()
     }
 
     fn start_pipeline(

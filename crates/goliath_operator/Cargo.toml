@@ -5,11 +5,12 @@ license-file.workspace = true
 version.workspace = true
 
 [dependencies]
-goliath_common = { path = "../goliath_common" }
+goliath_common = { path = "../goliath_common", features = ["video"] }
 
+futures-util = { workspace = true }
+gstreamer = { workspace = true }
 image = { workspace = true }
 log = { workspace = true }
-sdl2 = { version = "0.38.0", features = ["bundled"] }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 tokio-tungstenite = { workspace = true }

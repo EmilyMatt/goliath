@@ -1,6 +1,5 @@
 use crate::error::GoliathVehicleResult;
-use crate::video::PipelineWrapper;
-use goliath_common::{GoliathGstAppsrc, GoliathGstPipeline, GoliathVideoError};
+use goliath_common::{GoliathGstAppsrc, GoliathGstPipeline, GoliathVideoError, PipelineWrapper};
 use gstreamer::ClockTime;
 use gstreamer::prelude::{Cast, ElementExt, ElementExtManual, GstBinExtManual};
 use gstreamer_app::gst;
@@ -52,7 +51,7 @@ impl RTPPipeline {
         rtp264pay.link(&udpsink)?;
 
         Ok(Self {
-            pipeline: PipelineWrapper(pipeline),
+            pipeline: PipelineWrapper::wrap(pipeline),
             appsrc,
             started: AtomicBool::new(false),
             stopped: AtomicBool::new(false),
@@ -62,7 +61,7 @@ impl RTPPipeline {
 
 impl GoliathGstPipeline for RTPPipeline {
     fn get_pipeline(&self) -> &gstreamer::Pipeline {
-        &self.pipeline.0
+        self.pipeline.as_ref()
     }
 
     fn start_pipeline(

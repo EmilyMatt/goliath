@@ -5,8 +5,10 @@ license-file.workspace = true
 version.workspace = true
 
 [dependencies]
+bytes = { version = "1.11.0", default-features = false, features = ["std"]}
 bitcode = { workspace = true }
 env_logger = { workspace = true }
+lazy_static = { workspace = true }
 log = { workspace = true }
 gstreamer = { workspace = true, optional = true }
 gstreamer-app = { workspace = true, optional = true }

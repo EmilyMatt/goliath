@@ -4,10 +4,8 @@
 use crate::image_proc::{convert_image_to_screen_space, load_goliath_logo, resize_image};
 use crate::server::GoliathServer;
 use crate::ssd1306::create_ssd_connection;
-use crate::video::initiate_gstreamer;
 use error::GoliathVehicleResult;
-use lazy_static::lazy_static;
-use tokio::runtime::Handle;
+use goliath_common::{initiate_gstreamer, start_main_loop};
 
 mod error;
 mod image_proc;
@@ -16,19 +14,6 @@ mod server;
 mod session;
 mod ssd1306;
 mod video;
-
-lazy_static! {
-    static ref main_loop: Option<gstreamer::glib::MainLoop> =
-        Some(gstreamer::glib::MainLoop::new(None, false));
-}
-
-fn start_main_loop() {
-    main_loop.iter().for_each(|l| l.run());
-}
-
-fn stop_main_loop() {
-    main_loop.iter().for_each(|l| l.quit());
-}
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 4)]
 async fn main() -> GoliathVehicleResult<()> {
@@ -52,13 +37,7 @@ async fn main() -> GoliathVehicleResult<()> {
         log::info!("Awaiting new connection");
         let mut session_ctx = operator_connection.await_connection().await?;
 
-        Handle::current()
-            .spawn(async move {
-                session_ctx.run().await?;
-
-                GoliathVehicleResult::Ok(())
-            })
-            .await??;
+        tokio::spawn(async move { session_ctx.run().await }).await??;
 
         start_main_loop();
         log::info!("Main loop closed");
