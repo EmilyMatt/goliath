@@ -1,0 +1,22 @@
+[package]
+name = "goliath_common"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bitcode = { workspace = true }
+env_logger = { workspace = true }
+log = { workspace = true }
+gstreamer = { workspace = true, optional = true }
+gstreamer-app = { workspace = true, optional = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+tracing = { workspace = true, optional = true }
+tracing-subscriber = { workspace = true, optional = true }
+
+[features]
+default = []
+trace = ["dep:tracing", "dep:tracing-subscriber"]
+video = ["dep:gstreamer", "dep:gstreamer-app"]

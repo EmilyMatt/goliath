@@ -1,0 +1,5 @@
+.venv/
+.env
+target/
+upload_and_run.sh
+.idea/
