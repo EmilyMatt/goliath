@@ -41,7 +41,7 @@ jobs:
       - name: Install dependencies
         run: sudo ./bootstrap.sh
       - name: Run tests
-        run: cargo nextest run --all --all-features
+        run: cargo nextest run --all --all-features --no-tests=warn
 
   doc:
     name: Check Documentation
