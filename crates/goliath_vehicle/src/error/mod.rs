@@ -3,19 +3,17 @@ use gstreamer::glib;
 
 pub(crate) type GoliathVehicleResult<T> = Result<T, GoliathVehicleError>;
 
+#[allow(dead_code, clippy::enum_variant_names)]
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum GoliathVehicleError {
     #[error("General error: {0}")]
     GeneralError(String),
 
-    #[error("I2C error: {0}")]
-    I2C(#[from] rppal::i2c::Error),
-
-    #[error("PWM error: {0}")]
-    Pwm(#[from] rppal::pwm::Error),
-
     #[error("GPIO error: {0}")]
-    Gpio(#[from] rppal::gpio::Error),
+    GPIOError(#[from] jetgpio::gpio::Error),
+
+    #[error("I2C error: {0}")]
+    I2CError(#[from] jetgpio::i2c::Error),
 
     #[error("Not all bytes were written: {0}")]
     WriteError(String),

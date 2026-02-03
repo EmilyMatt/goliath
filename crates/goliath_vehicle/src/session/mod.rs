@@ -7,6 +7,7 @@ use crate::video::rtp_pipeline::RTPPipeline;
 use futures_util::stream::StreamExt;
 pub use goliath_common::{GoliathCommand, MotorCommand};
 use goliath_common::{GoliathGstPipeline, stop_main_loop};
+use jetgpio::Gpio;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::thread;
@@ -30,9 +31,10 @@ impl GoliathVehicleSession {
         operator_ws: WebSocketStream<MaybeTlsStream<TcpStream>>,
         capture_caps: ZedCamCaps,
         encoder_type: EncoderType,
+        gpio: Arc<Gpio>,
     ) -> GoliathVehicleResult<Self> {
         let ip = match operator_addr {
-            SocketAddr::V4(ip) => ip.to_string(),
+            SocketAddr::V4(ip) => ip.ip().to_string(),
             SocketAddr::V6(_) => {
                 return Err(GoliathVehicleError::GeneralError(
                     "IPV6 is not supported".to_string(),
@@ -47,7 +49,7 @@ impl GoliathVehicleSession {
         let motors_thread = thread::Builder::new()
             .name("MotorsThread".to_string())
             .spawn({
-                let mut motors = MotorsContoller::try_new()?;
+                let mut motors = MotorsContoller::try_new(gpio)?;
                 move || motors.run_thread(motors_cmd_rx)
             })?;
 
@@ -93,6 +95,7 @@ impl GoliathVehicleSession {
                 }
                 Ok(Message::Binary(bytes)) => match GoliathCommand::read_from_bytes(&bytes) {
                     Ok(cmd) => {
+                        log::info!("Got command: {cmd:?}");
                         if let Err(err) = self.handle_command(cmd).await {
                             log::error!("Failed to handle command: {err}");
                             break;
@@ -126,11 +129,13 @@ impl GoliathVehicleSession {
             .await
             .map_err(|err| GoliathVehicleError::TokioSendError(err.to_string()))?;
 
-        self.capture_pipeline.stop_pipeline().ok();
+        log::info!("Stopped pipeline");
         if let Some(motors_thread) = self.motors_thread.take() {
+            log::info!("Joining motors thread");
             motors_thread.join().ok();
         }
 
+        self.capture_pipeline.stop_pipeline().ok();
         stop_main_loop();
         Ok(())
     }

@@ -3,6 +3,8 @@ use crate::error::GoliathVehicleError;
 use crate::motors::tracks_driver::TracksDriver;
 use crate::motors::turret_driver::TurretDriver;
 use goliath_common::MotorCommand;
+use jetgpio::Gpio;
+use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::error::TryRecvError;
 
@@ -16,10 +18,10 @@ pub(crate) struct MotorsContoller {
 }
 
 impl MotorsContoller {
-    pub(crate) fn try_new() -> GoliathVehicleResult<Self> {
+    pub(crate) fn try_new(gpio: Arc<Gpio>) -> GoliathVehicleResult<Self> {
         Ok(Self {
-            tracks_driver: TracksDriver::try_new()?,
-            _turret_driver: TurretDriver::new(),
+            tracks_driver: TracksDriver::try_new(&gpio)?,
+            _turret_driver: TurretDriver::new(&gpio)?,
         })
     }
 

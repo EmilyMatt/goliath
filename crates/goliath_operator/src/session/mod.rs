@@ -2,7 +2,9 @@ use crate::client::GoliathClient;
 use crate::error::GoliathOperatorResult;
 use crate::video::OperatorPipeline;
 use goliath_common::{GoliathCommand, GoliathGstPipeline, MotorCommand, stop_main_loop};
+use std::io::ErrorKind;
 use std::sync::Arc;
+use tokio::net::UdpSocket;
 
 pub(crate) struct GoliathOperatorSession {
     client_conn: GoliathClient,
@@ -26,6 +28,9 @@ impl GoliathOperatorSession {
         log::info!("Starting Session");
         self.operator_pipeline.start_pipeline(None)?;
 
+        let controller_socket = UdpSocket::bind("0.0.0.0:6000").await?;
+        let mut mtu_buffer = [0u8; 1400];
+
         // Main loop
         loop {
             match self.client_conn.poll_report() {
@@ -38,6 +43,46 @@ impl GoliathOperatorSession {
                     break;
                 }
             }
+
+            controller_socket.readable().await?;
+
+            match controller_socket.try_recv(&mut mtu_buffer) {
+                Ok(read) => {
+                    let read_slice = &mtu_buffer[..read];
+
+                    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+                    struct ControllerInfo {
+                        thrust: f32,
+                        steer: f32,
+                    }
+
+                    if let Ok(msg) = serde_json::from_slice::<ControllerInfo>(read_slice) {
+                        log::info!("Got msg: {msg:?}");
+                        if let Err(e) = self
+                            .client_conn
+                            .send_command(GoliathCommand::Motor(MotorCommand::Thrust(msg.thrust)))
+                            .await
+                        {
+                            log::error!("Error while sending command: {e}");
+                            break;
+                        }
+
+                        if let Err(e) = self
+                            .client_conn
+                            .send_command(GoliathCommand::Motor(MotorCommand::Steer(msg.steer)))
+                            .await
+                        {
+                            log::error!("Error while sending command: {e}");
+                            break;
+                        }
+                    }
+                }
+                Err(e) if e.kind() == ErrorKind::WouldBlock => {}
+                Err(e) => {
+                    log::error!("Error while reading UDP packet: {e}");
+                    break;
+                }
+            };
         }
 
         self.client_conn

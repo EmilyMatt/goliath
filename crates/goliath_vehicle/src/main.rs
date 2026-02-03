@@ -6,6 +6,9 @@ use crate::server::GoliathServer;
 use crate::ssd1306::create_ssd_connection;
 use error::GoliathVehicleResult;
 use goliath_common::{initiate_gstreamer, start_main_loop};
+use jetgpio::Gpio;
+use std::sync::Arc;
+use tokio::runtime::Handle;
 
 mod error;
 mod image_proc;
@@ -20,6 +23,7 @@ async fn main() -> GoliathVehicleResult<()> {
     goliath_common::common_init_for_trace()?;
     initiate_gstreamer()?;
 
+    let gpio = Arc::new(Gpio::new()?);
     let mut ssd = create_ssd_connection()?;
 
     let main_logo = load_goliath_logo().and_then(|img| {
@@ -35,11 +39,11 @@ async fn main() -> GoliathVehicleResult<()> {
     let mut operator_connection = GoliathServer::try_new(5000).await?;
     loop {
         log::info!("Awaiting new connection");
-        let mut session_ctx = operator_connection.await_connection().await?;
+        let mut session_ctx = operator_connection
+            .await_connection(Arc::clone(&gpio))
+            .await?;
 
+        Handle::current().spawn_blocking(start_main_loop);
         tokio::spawn(async move { session_ctx.run().await }).await??;
-
-        start_main_loop();
-        log::info!("Main loop closed");
     }
 }

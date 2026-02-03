@@ -31,16 +31,16 @@ impl RTPPipeline {
             .property("config-interval", 1)
             .build()?;
 
+        let clients_list = output_uris
+            .into_iter()
+            .map(|(ip, port)| format!("{ip}:{port}"))
+            .collect::<Vec<_>>()
+            .join(",");
+
+        log::info!("Sending to clients: {clients_list:?}");
         let udpsink = gstreamer::ElementFactory::make("udpsink")
             .name("udp_sink")
-            .property(
-                "clients",
-                output_uris
-                    .into_iter()
-                    .map(|(ip, port)| format!("{}:{}", ip, port))
-                    .collect::<Vec<_>>()
-                    .join(","),
-            )
+            .property("clients", clients_list)
             .property("sync", false)
             .property("async", false)
             .build()?;

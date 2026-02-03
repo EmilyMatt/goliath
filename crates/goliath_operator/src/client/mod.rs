@@ -6,7 +6,6 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 use tokio::net::TcpStream;
-use tokio::runtime::Handle;
 use tokio::sync::mpsc::error::TryRecvError;
 use tokio::sync::{mpsc, oneshot};
 use tokio::task::JoinHandle;
@@ -122,7 +121,7 @@ impl GoliathClient {
     }
 
     pub(crate) async fn try_new(address: Ipv4Addr, port: u16) -> GoliathOperatorResult<Self> {
-        let url = format!("{address}:{port}");
+        let url = format!("ws://{address}:{port}");
         let (ws_stream, _) = connect_async(&url).await.expect("Failed to connect");
 
         let (command_tx, command_rx) = mpsc::channel::<GoliathCommand>(10);
@@ -159,11 +158,8 @@ impl GoliathClient {
 
 impl Drop for GoliathClient {
     fn drop(&mut self) {
-        if let Some((kill_switch_tx, task_handle)) = self.client_task.take() {
+        if let Some((kill_switch_tx, _task_handle)) = self.client_task.take() {
             kill_switch_tx.send(()).ok();
-            if let Ok(handle) = Handle::try_current() {
-                handle.block_on(task_handle).ok();
-            }
         }
     }
 }

@@ -1,6 +1,7 @@
 use crate::GoliathVehicleResult;
 use crate::ssd1306::commands::{AddressingMode, VComHDeselectLevel};
-use rppal::i2c::I2c;
+use jetgpio::I2c;
+use jetgpio::i2c::bus::I2cBus;
 use tinyvec::ArrayVec;
 
 use crate::error::GoliathVehicleError;
@@ -43,14 +44,9 @@ impl SSD1306 {
         self.command_buffer.set_len(command.get_len() + 1);
         self.command_buffer[1..].copy_from_slice(&command.get_bytes());
 
-        let written = self.interface.write(&self.command_buffer)?;
-        if written != self.command_buffer.len() {
-            return Err(GoliathVehicleError::WriteError(
-                "Not all bytes could be written".to_string(),
-            ));
-        }
-
-        Ok(())
+        self.interface
+            .write(self.command_buffer[0], &self.command_buffer[1..])
+            .map_err(Into::into)
     }
 
     #[cfg_attr(feature = "trace", tracing::instrument(level = "info", skip_all))]
@@ -82,14 +78,9 @@ impl SSD1306 {
                         [page_idx * screen_width..(page_idx + 1) * screen_width],
                 );
 
-                let written = self.interface.write(&self.data_buffer)?;
-                if written != self.data_buffer.len() {
-                    return Err(GoliathVehicleError::WriteError(
-                        "Not all bytes could be written to the display".to_string(),
-                    ));
-                }
-
-                Ok(())
+                self.interface
+                    .write(self.data_buffer[0], &self.data_buffer[1..])
+                    .map_err(Into::into)
             })
     }
 
@@ -197,8 +188,8 @@ impl SSD1306Builder {
 }
 
 pub(crate) fn create_ssd_connection() -> GoliathVehicleResult<SSD1306> {
-    let mut i2c = I2c::new()?;
-    i2c.set_slave_address(0x3C)?;
+    let mut i2c = I2c::init(I2cBus::I2c1, 0)?;
+    i2c.set_slave_address(0x3C);
 
     let mut ssd = SSD1306::builder(i2c, 128, 32)
         .with_oscillator_frequency(0x8)

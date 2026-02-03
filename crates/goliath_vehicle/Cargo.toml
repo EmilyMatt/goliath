@@ -11,9 +11,9 @@ futures-util = { workspace = true }
 gstreamer = { workspace = true }
 gstreamer-app = { workspace = true }
 image = { workspace = true }
+jetgpio = { version = "0.1.2", default-features = false, features = ["orin"] }
 lazy_static = { workspace = true }
 log = { workspace = true }
-rppal = { workspace = true }
 thiserror = { workspace = true }
 tinyvec = { workspace = true }
 tokio = { workspace = true }

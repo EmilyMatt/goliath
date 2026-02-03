@@ -1,7 +1,7 @@
 use crate::error::GoliathOperatorResult;
 use goliath_common::{GoliathGstPipeline, GoliathVideoError, PipelineWrapper};
 use gstreamer::ClockTime;
-use gstreamer::prelude::{ElementExt, ElementExtManual, GstBinExtManual};
+use gstreamer::prelude::{ElementExt, ElementExtManual, GObjectExtManualGst, GstBinExtManual};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 pub(crate) struct OperatorPipeline {
@@ -41,8 +41,9 @@ impl OperatorPipeline {
 
         let queue = gstreamer::ElementFactory::make("queue")
             .name("queue")
-            .property("leaky", 2)
             .build()?;
+
+        queue.set_property_from_str("leaky", "downstream");
 
         let videoconvert = gstreamer::ElementFactory::make("videoconvert")
             .name("format_converter")
@@ -51,6 +52,7 @@ impl OperatorPipeline {
         let ximagesink = gstreamer::ElementFactory::make("ximagesink")
             .name("video_window")
             .property("sync", false)
+            .property("async", false)
             .build()?;
 
         pipeline.add_many([
@@ -70,7 +72,7 @@ impl OperatorPipeline {
         h264parse.link(&decoder)?;
         decoder.link(&queue)?;
         queue.link(&videoconvert)?;
-        queue.link(&ximagesink)?;
+        videoconvert.link(&ximagesink)?;
 
         Ok(Self {
             pipeline: PipelineWrapper::wrap(pipeline),
@@ -99,6 +101,7 @@ impl GoliathGstPipeline for OperatorPipeline {
             log::warn!("State was not immediately set to playing, could async behaviour be on?");
         }
 
+        log::info!("Pipeline started");
         Ok(())
     }
 

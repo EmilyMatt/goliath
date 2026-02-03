@@ -1,6 +1,9 @@
 use crate::GoliathVehicleResult;
 use crate::motors::directional_motor_pin::DirectionalMotorPin;
-use rppal::pwm::Channel;
+use jetgpio::Gpio;
+use jetgpio::gpio::valid_pins;
+use jetgpio::pwm::Pwm;
+use std::sync::Arc;
 
 pub(crate) struct TracksDriver {
     left_track: DirectionalMotorPin,
@@ -10,11 +13,19 @@ pub(crate) struct TracksDriver {
 }
 
 impl TracksDriver {
-    pub(crate) fn try_new() -> GoliathVehicleResult<Self> {
-        let mut left_track = DirectionalMotorPin::try_new(Channel::Pwm0, 4, 17)?;
+    pub(crate) fn try_new(gpio: &Arc<Gpio>) -> GoliathVehicleResult<Self> {
+        let mut left_track = DirectionalMotorPin::try_new(
+            Pwm::new(valid_pins::Pin32)?,
+            gpio.get_output(valid_pins::Pin3)?,
+            gpio.get_output(valid_pins::Pin4)?,
+        )?;
         left_track.set_power_and_direction(0.0, true)?; // Ensure the motor is stopped on init
 
-        let mut right_track = DirectionalMotorPin::try_new(Channel::Pwm1, 22, 27)?;
+        let mut right_track = DirectionalMotorPin::try_new(
+            Pwm::new(valid_pins::Pin32)?,
+            gpio.get_output(valid_pins::Pin3)?,
+            gpio.get_output(valid_pins::Pin4)?,
+        )?;
         right_track.set_power_and_direction(0.0, true)?; // Ensure the motor is stopped on init
 
         Ok(Self {
